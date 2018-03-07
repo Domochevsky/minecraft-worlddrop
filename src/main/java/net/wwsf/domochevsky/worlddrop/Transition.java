@@ -22,17 +22,17 @@ public class Transition
     {
 		if (!net.minecraftforge.common.ForgeHooks.onTravelToDimension(player, dimensionTo)) { return; }	// Moving that here, to consolidate these functions.
 
-		net.minecraft.world.Teleporter teleporter = player.mcServer.worldServerForDimension(dimensionTo).getDefaultTeleporter();
+		net.minecraft.world.Teleporter teleporter = player.mcServer.getWorld(dimensionTo).getDefaultTeleporter();
 		PlayerList playerList = player.mcServer.getPlayerList();
 
         int dimensionFrom = player.dimension;
 
         // Changing dimensions...
-        WorldServer wsPrev = player.mcServer.worldServerForDimension(player.dimension);
+        WorldServer wsPrev = player.mcServer.getWorld(player.dimension);
 
         player.dimension = dimensionTo;
 
-        WorldServer wsNew = player.mcServer.worldServerForDimension(player.dimension);
+        WorldServer wsNew = player.mcServer.getWorld(player.dimension);
 
         // Respawn? Used to recreate the player entity.
         player.connection.sendPacket(new SPacketRespawn(player.dimension, wsNew.getDifficulty(), wsNew.getWorldInfo().getTerrainType(), player.interactionManager.getGameType()));
@@ -81,28 +81,28 @@ public class Transition
 		// Event first
 		if (!net.minecraftforge.common.ForgeHooks.onTravelToDimension(entity, dimensionIn)) { return entity; }
 
-		entity.worldObj.theProfiler.startSection("changeDimension");
+		entity.world.profiler.startSection("changeDimension");
 
 		MinecraftServer minecraftserver = entity.getServer();
 
 		// Why is this different from the player-style?
         int prevDim = entity.dimension;
 
-        WorldServer wsOld = minecraftserver.worldServerForDimension(prevDim);
-        WorldServer wsNew = minecraftserver.worldServerForDimension(dimensionIn);
+        WorldServer wsOld = minecraftserver.getWorld(prevDim);
+        WorldServer wsNew = minecraftserver.getWorld(dimensionIn);
 
         entity.dimension = dimensionIn;
 
         // Safety of sorts?
         if (prevDim == 1 && dimensionIn == 1)
         {
-            wsNew = minecraftserver.worldServerForDimension(0);
+            wsNew = minecraftserver.getWorld(0);
             entity.dimension = 0;
         }
 
-        entity.worldObj.removeEntity(entity);
+        entity.world.removeEntity(entity);
         entity.isDead = false;
-        entity.worldObj.theProfiler.startSection("reposition");
+        entity.world.profiler.startSection("reposition");
 
         BlockPos blockpos;
 
@@ -118,17 +118,17 @@ public class Transition
 
             if (dimensionIn == -1)
             {
-                posX = MathHelper.clamp_double(posX / posZ, wsNew.getWorldBorder().minX() + 16.0D, wsNew.getWorldBorder().maxX() - 16.0D);
-                posY = MathHelper.clamp_double(posY / posZ, wsNew.getWorldBorder().minZ() + 16.0D, wsNew.getWorldBorder().maxZ() - 16.0D);
+                posX = MathHelper.clamp(posX / posZ, wsNew.getWorldBorder().minX() + 16.0D, wsNew.getWorldBorder().maxX() - 16.0D);
+                posY = MathHelper.clamp(posY / posZ, wsNew.getWorldBorder().minZ() + 16.0D, wsNew.getWorldBorder().maxZ() - 16.0D);
             }
             else if (dimensionIn == 0)
             {
-                posX = MathHelper.clamp_double(posX * posZ, wsNew.getWorldBorder().minX() + 16.0D, wsNew.getWorldBorder().maxX() - 16.0D);
-                posY = MathHelper.clamp_double(posY * posZ, wsNew.getWorldBorder().minZ() + 16.0D, wsNew.getWorldBorder().maxZ() - 16.0D);
+                posX = MathHelper.clamp(posX * posZ, wsNew.getWorldBorder().minX() + 16.0D, wsNew.getWorldBorder().maxX() - 16.0D);
+                posY = MathHelper.clamp(posY * posZ, wsNew.getWorldBorder().minZ() + 16.0D, wsNew.getWorldBorder().maxZ() - 16.0D);
             }
 
-            posX = MathHelper.clamp_int((int)posX, -29999872, 29999872);
-            posY = MathHelper.clamp_int((int)posY, -29999872, 29999872);
+            posX = MathHelper.clamp((int)posX, -29999872, 29999872);
+            posY = MathHelper.clamp((int)posY, -29999872, 29999872);
 
             float f = entity.rotationYaw;
 
@@ -142,9 +142,10 @@ public class Transition
         }
 
         wsOld.updateEntityWithOptionalForce(entity, false);
-        entity.worldObj.theProfiler.endStartSection("reloading");
+        entity.world.profiler.endStartSection("reloading");
 
-        Entity newEntity = EntityList.createEntityByName(EntityList.getEntityString(entity), wsNew);
+       //Entity newEntity = EntityList.createEntityByName(EntityList.getEntityString(entity), wsNew);
+        Entity newEntity = EntityList.createEntityByIDFromName(EntityList.getKey(entity), wsNew);
 
         if (newEntity != null)
         {
@@ -174,7 +175,7 @@ public class Transition
             boolean flag = newEntity.forceSpawn;
             newEntity.forceSpawn = true;
 
-            wsNew.spawnEntityInWorld(newEntity);
+            wsNew.spawnEntity(newEntity);
             newEntity.forceSpawn = flag;
 
             wsNew.updateEntityWithOptionalForce(newEntity, false);
@@ -182,12 +183,12 @@ public class Transition
 
         // Begone, your copy is now active
         entity.isDead = true;
-        entity.worldObj.theProfiler.endSection();
+        entity.world.profiler.endSection();
 
         wsOld.resetUpdateEntityTick();
         wsNew.resetUpdateEntityTick();
 
-        entity.worldObj.theProfiler.endSection();
+        entity.world.profiler.endSection();
 
         return newEntity;
     }
@@ -208,7 +209,7 @@ public class Transition
 
         float entityRotationYaw = entityIn.rotationYaw;	// What is this being saved for?
 
-        oldWorldIn.theProfiler.startSection("moving");
+        oldWorldIn.profiler.startSection("moving");
 
         // Overworld, where we're going
         if (entityIn.dimension == 1)
@@ -236,14 +237,14 @@ public class Transition
             }
         }
 
-        oldWorldIn.theProfiler.endSection();
+        oldWorldIn.profiler.endSection();
 
         // ...anything else? Did not come from the overworld
         if (lastDimension != 1)
         {
-            oldWorldIn.theProfiler.startSection("placing");
-            newPosX = MathHelper.clamp_int((int)newPosX, -29999872, 29999872);
-            newPosZ = MathHelper.clamp_int((int)newPosZ, -29999872, 29999872);
+            oldWorldIn.profiler.startSection("placing");
+            newPosX = MathHelper.clamp((int)newPosX, -29999872, 29999872);
+            newPosZ = MathHelper.clamp((int)newPosZ, -29999872, 29999872);
 
             if (entityIn.isEntityAlive())
             {
@@ -251,11 +252,11 @@ public class Transition
 
                 //teleporter.placeInPortal(entityIn, entityRotationYaw);	// Found it. Begone with ye.
 
-                toWorldIn.spawnEntityInWorld(entityIn);
+                toWorldIn.spawnEntity(entityIn);
                 toWorldIn.updateEntityWithOptionalForce(entityIn, false);
             }
 
-            oldWorldIn.theProfiler.endSection();
+            oldWorldIn.profiler.endSection();
         }
 
         entityIn.setWorld(toWorldIn);

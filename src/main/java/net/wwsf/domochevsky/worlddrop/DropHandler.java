@@ -240,7 +240,7 @@ public class DropHandler
 			currentDrop = it.next();
 
 			if (currentDrop.isClimb) { continue; }	// Only interested in drops at the moment
-			if (player.worldObj.provider.getDimension() != currentDrop.worldFromID) { continue; } // Not the relevant dimension/world
+			if (player.world.provider.getDimension() != currentDrop.worldFromID) { continue; } // Not the relevant dimension/world
 			if (player.posY > currentDrop.heightFrom) { continue; } // Not at or below the height required to drop from
 
 			if (!DimensionManager.isDimensionRegistered(currentDrop.worldToID)) // Target dimension doesn't seem to exist, so not doing this
@@ -252,7 +252,7 @@ public class DropHandler
 			player.removePassengers();			// TODO: Clutch for now. Right now the player is assumed to be the highest rider in the stack.
 			moveEntity(currentDrop, player);	// Checks out. Let's do this.
 
-			secureTargetLocation(player.worldObj, player);
+			secureTargetLocation(player.world, player);
 
 			return true;	// Successful drop
 		}
@@ -272,7 +272,7 @@ public class DropHandler
 			climb = it.next();
 
 			if (!climb.isClimb) { continue; }	// Only interested in drops at the moment
-			if (player.worldObj.provider.getDimension() != climb.worldFromID) { continue; } // Not the relevant dimension/world
+			if (player.world.provider.getDimension() != climb.worldFromID) { continue; } // Not the relevant dimension/world
 			if (player.posY < climb.heightFrom)	{ continue; }	// Below the required height
 
 			if (!DimensionManager.isDimensionRegistered(climb.worldToID)) // Target dimension doesn't seem to exist, so not doing this
@@ -284,7 +284,7 @@ public class DropHandler
 			player.removePassengers();	// TODO
 			moveEntity(climb, player); // Checks out. Let's do this.
 
-			secureTargetLocation(player.worldObj, player);
+			secureTargetLocation(player.world, player);
 
 			return true;	// Successful climb
 		}
@@ -548,7 +548,7 @@ public class DropHandler
 	// Displaying all known drops to the one who asked
 	static void showDrops(ICommandSender sender)
 	{
-		sender.addChatMessage(new TextComponentString("§e[World Drop] Known drops:"));
+		sender.sendMessage(new TextComponentString("§e[World Drop] Known drops:"));
 
 		ListIterator<_Drop> it = drops.listIterator();
 		_Drop drop;
@@ -567,10 +567,10 @@ public class DropHandler
 				desc += " Entry point is set to X " + drop.posX + " / Z " + drop.posZ + ".";
 			}
 
-			sender.addChatMessage(new TextComponentString(desc));
+			sender.sendMessage(new TextComponentString(desc));
 		}
 
-		sender.addChatMessage(new TextComponentString("§e[World Drop] Known climbs:"));
+		sender.sendMessage(new TextComponentString("§e[World Drop] Known climbs:"));
 
 		it = drops.listIterator();	// Reset
 
@@ -588,7 +588,7 @@ public class DropHandler
 				desc += " Entry point is set to X " + drop.posX + " / Z " + drop.posZ + ".";
 			}
 
-			sender.addChatMessage(new TextComponentString(desc));
+			sender.sendMessage(new TextComponentString(desc));
 		}
 	}
 
@@ -609,12 +609,12 @@ public class DropHandler
 
 		if (doClimbBool)
 		{
-			sender.addChatMessage(new TextComponentString("[World Drop] Created a climb from world " + worldFromID + " (Height " +
+			sender.sendMessage(new TextComponentString("[World Drop] Created a climb from world " + worldFromID + " (Height " +
 					heightFromNum + " and above) to " + "world " + worldToID + " (Height " + heightToNum + ")."));
 		}
 		else
 		{
-			sender.addChatMessage(new TextComponentString("[World Drop] Created a drop from world " + worldFromID + " (Height " +
+			sender.sendMessage(new TextComponentString("[World Drop] Created a drop from world " + worldFromID + " (Height " +
 					heightFromNum + " and below) to " + "world " + worldToID + " (Height " + heightToNum + "). "));
 		}
 	}
@@ -627,7 +627,7 @@ public class DropHandler
 
 		if (dropID < 0 || dropID >= drops.size())
 		{
-			sender.addChatMessage(new TextComponentString("§c[World Drop] Drop " + dropID + " doesn't seem to exist. Doing nothing."));
+			sender.sendMessage(new TextComponentString("§c[World Drop] Drop " + dropID + " doesn't seem to exist. Doing nothing."));
 			return;
 		}
 
@@ -643,11 +643,11 @@ public class DropHandler
 
 		if (!knownDrop.forceCoords)
 		{
-			sender.addChatMessage(new TextComponentString("§c[World Drop] Point entry for Drop " + dropID + " has been disabled."));
+			sender.sendMessage(new TextComponentString("§c[World Drop] Point entry for Drop " + dropID + " has been disabled."));
 		}
 		else
 		{
-			sender.addChatMessage(new TextComponentString("§a[World Drop] Point entry for Drop " + dropID +
+			sender.sendMessage(new TextComponentString("§a[World Drop] Point entry for Drop " + dropID +
 					" has been enabled and set to X " + knownDrop.posX + " and Z " + knownDrop.posZ + "."));
 		}
 	}
@@ -680,11 +680,11 @@ public class DropHandler
 		if (dropID >= 0 && dropID < drops.size())
 		{
 			drops.remove(dropID);
-			sender.addChatMessage(new TextComponentString("§9[World Drop] Removed drop/climb with ID " + dropID + "."));
+			sender.sendMessage(new TextComponentString("§9[World Drop] Removed drop/climb with ID " + dropID + "."));
 		}
 		else
 		{
-			sender.addChatMessage(new TextComponentString("§c[World Drop] That doesn't seem to be a valid entry for removal."));
+			sender.sendMessage(new TextComponentString("§c[World Drop] That doesn't seem to be a valid entry for removal."));
 		}
 	}
 }

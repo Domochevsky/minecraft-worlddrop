@@ -9,7 +9,7 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 
 
-@Mod(modid="dropchevsky", name="World Drop", version="b15", acceptableRemoteVersions = "*", canBeDeactivated = true, acceptedMinecraftVersions="[1.9,1.11)")
+@Mod(modid="dropchevsky", name="World Drop", version="b16", acceptableRemoteVersions = "*", canBeDeactivated = true, acceptedMinecraftVersions="[1.12]")
 public class Main
 {
 	private static boolean disablePortals;	// If this is true then we're stopping fire from igniting regular portals in all dimensions
