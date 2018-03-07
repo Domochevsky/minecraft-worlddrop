@@ -14,11 +14,11 @@ import net.minecraft.util.text.TextComponentString;
 public class Command_SetDrop implements ICommand
 {
 	@Override
-	public String getCommandName() { return "worlddrop"; }
+	public String getName() { return "worlddrop"; }
 
 
 	@Override
-	public String getCommandUsage(ICommandSender sender)
+	public String getUsage(ICommandSender sender)
 	{
 		return "worlddrop set [I:World ID from] [I:World ID to] (I:Height from) (I:Height to) (B:isClimb) OR worlddrop remove [drop ID] OR worlddrop show";
 	}
@@ -32,7 +32,7 @@ public class Command_SetDrop implements ICommand
 
 
 	@Override
-	public List<String> getCommandAliases()
+	public List<String> getAliases()
 	{
 		List aliases = new ArrayList();
 
@@ -57,7 +57,7 @@ public class Command_SetDrop implements ICommand
 
 		else if (args.length == 1 && args[0].equalsIgnoreCase("save"))	// Saving our current drops to file
 		{
-			sender.addChatMessage(new TextComponentString("[World Drop] Saving all drops to file."));
+			sender.sendMessage(new TextComponentString("[World Drop] Saving all drops to file."));
 			DropHandler.saveDrops();
 		}
 
@@ -68,31 +68,31 @@ public class Command_SetDrop implements ICommand
 
 		else if(args.length == 3 && args[0].equalsIgnoreCase("set"))	// Three argument given.
 	    {
-			sender.addChatMessage(new TextComponentString("[World Drop] 3 arguments given. Assuming them to be world IDs. Also making a bunch of other assumptions."));
+			sender.sendMessage(new TextComponentString("[World Drop] 3 arguments given. Assuming them to be world IDs. Also making a bunch of other assumptions."));
 			DropHandler.sortInput(sender, args[1], args[2], "" + 0, "" + 256, "" + false);
 	    }
 
 		else if(args.length == 4 && args[0].equalsIgnoreCase("set"))	// Four argument given. Getting there
 	    {
-			sender.addChatMessage(new TextComponentString("[World Drop] Four arguments given. Assuming them to be world IDs and FROM height. Making assumptions about TO height."));
+			sender.sendMessage(new TextComponentString("[World Drop] Four arguments given. Assuming them to be world IDs and FROM height. Making assumptions about TO height."));
 			DropHandler.sortInput(sender, args[1], args[2], args[3], "" + 256, "" + false);
 	    }
 
 		else if(args.length == 5 && args[0].equalsIgnoreCase("set"))	// Five argument given. Solid
 	    {
-			sender.addChatMessage(new TextComponentString("[World Drop] Five arguments given. Assuming them to be world IDs and FROM/TO heights."));
+			sender.sendMessage(new TextComponentString("[World Drop] Five arguments given. Assuming them to be world IDs and FROM/TO heights."));
 			DropHandler.sortInput(sender, args[1], args[2], args[3], args[4], "" + false);
 	    }
 
 		else if(args.length == 5 && args[0].equalsIgnoreCase("point"))	// Five argument given. Solid
 	    {
-			sender.addChatMessage(new TextComponentString("[World Drop] Five arguments given. Setting the entry point for an existing drop."));
+			sender.sendMessage(new TextComponentString("[World Drop] Five arguments given. Setting the entry point for an existing drop."));
 			DropHandler.sortPoint(sender, args[1], args[2], args[3], args[4]);
 	    }
 
 		else if(args.length == 6 && args[0].equalsIgnoreCase("set"))	// Six argument given. Excellent
 	    {
-			sender.addChatMessage(new TextComponentString("[World Drop] Six arguments given. Assuming them to be world IDs, FROM/TO heights and whether or not to do a drop or climb."));
+			sender.sendMessage(new TextComponentString("[World Drop] Six arguments given. Assuming them to be world IDs, FROM/TO heights and whether or not to do a drop or climb."));
 			DropHandler.sortInput(sender, args[1], args[2], args[3], args[4], args[5]);
 	    }
 
@@ -105,13 +105,13 @@ public class Command_SetDrop implements ICommand
 
 	private void showHelp(ICommandSender sender)
 	{
-		sender.addChatMessage(new TextComponentString("[World Drop] Known drops/climbs: " + DropHandler.getNumberOfDrops()));
-		sender.addChatMessage(new TextComponentString("[World Drop] Usage:"));
-		sender.addChatMessage(new TextComponentString("[World Drop] /worlddrop set [I:World ID from] [I:World ID to] (I:Height from) (I:Height to) (B:isClimb) - Set up a drop/climb for this server."));
-		sender.addChatMessage(new TextComponentString("[World Drop] /worlddrop remove [Drop ID] - Remove a known drop."));
-		sender.addChatMessage(new TextComponentString("[World Drop] /worlddrop show - See all known drops for this server."));
-		sender.addChatMessage(new TextComponentString("[World Drop] /worlddrop save - Save all drops to disk."));
-		sender.addChatMessage(new TextComponentString("[World Drop] /worlddrop point [I:Drop ID] [B:isEnabled] [I:Coord X] [I:Coord Z] - Change an existing drop to exit at a specific X/Z position."));
+		sender.sendMessage(new TextComponentString("[World Drop] Known drops/climbs: " + DropHandler.getNumberOfDrops()));
+		sender.sendMessage(new TextComponentString("[World Drop] Usage:"));
+		sender.sendMessage(new TextComponentString("[World Drop] /worlddrop set [I:World ID from] [I:World ID to] (I:Height from) (I:Height to) (B:isClimb) - Set up a drop/climb for this server."));
+		sender.sendMessage(new TextComponentString("[World Drop] /worlddrop remove [Drop ID] - Remove a known drop."));
+		sender.sendMessage(new TextComponentString("[World Drop] /worlddrop show - See all known drops for this server."));
+		sender.sendMessage(new TextComponentString("[World Drop] /worlddrop save - Save all drops to disk."));
+		sender.sendMessage(new TextComponentString("[World Drop] /worlddrop point [I:Drop ID] [B:isEnabled] [I:Coord X] [I:Coord Z] - Change an existing drop to exit at a specific X/Z position."));
 	}
 
 
@@ -143,7 +143,7 @@ public class Command_SetDrop implements ICommand
 
 
 	@Override
-	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos)
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos)
 	{
 		return null;
 	}
@@ -154,4 +154,5 @@ public class Command_SetDrop implements ICommand
 	{
 		return false;
 	}
+
 }

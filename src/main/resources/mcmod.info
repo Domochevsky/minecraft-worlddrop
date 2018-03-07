@@ -1,0 +1,16 @@
+[
+{
+  "modid": "dropchevsky",
+  "name": "World Drop",
+  "description": "Lets you set up drops from one dimension to another, at configurable heights.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Domochevsky and Felina_Lain"],
+  "credits": "Domochevsky for the original mod, and his advices during the updating process. Thanks again.",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
