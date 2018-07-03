@@ -517,7 +517,7 @@ public class DropHandler
 	// Displaying all known drops to the one who asked
 	static void showDrops(ICommandSender sender)
 	{
-		sender.sendMessage(new TextComponentString("\u00A7e[World Drop] Known drops:"));
+		sender.sendMessage(new TextComponentString("[World Drop] Known drops:"));
 
 		ListIterator<_Drop> it = drops.listIterator();
 		_Drop drop;
@@ -539,7 +539,7 @@ public class DropHandler
 			sender.sendMessage(new TextComponentString(desc));
 		}
 
-		sender.sendMessage(new TextComponentString("\u00A7e[World Drop] Known climbs:"));
+		sender.sendMessage(new TextComponentString("[World Drop] Known climbs:"));
 
 		it = drops.listIterator();	// Reset
 
@@ -596,7 +596,7 @@ public class DropHandler
 
 		if (dropID < 0 || dropID >= drops.size())
 		{
-			sender.sendMessage(new TextComponentString("\u00A7c[World Drop] Drop " + dropID + " doesn't seem to exist. Doing nothing."));
+			sender.sendMessage(new TextComponentString("[World Drop] Drop " + dropID + " doesn't seem to exist. Doing nothing."));
 			return;
 		}
 
@@ -612,11 +612,11 @@ public class DropHandler
 
 		if (!knownDrop.forceCoords)
 		{
-			sender.sendMessage(new TextComponentString("\u00A7c[World Drop] Point entry for Drop " + dropID + " has been disabled."));
+			sender.sendMessage(new TextComponentString("[World Drop] Point entry for Drop " + dropID + " has been disabled."));
 		}
 		else
 		{
-			sender.sendMessage(new TextComponentString("\u00A7a[World Drop] Point entry for Drop " + dropID +
+			sender.sendMessage(new TextComponentString("[World Drop] Point entry for Drop " + dropID +
 					" has been enabled and set to X " + knownDrop.posX + " and Z " + knownDrop.posZ + "."));
 		}
 	}
@@ -649,11 +649,11 @@ public class DropHandler
 		if (dropID >= 0 && dropID < drops.size())
 		{
 			drops.remove(dropID);
-			sender.sendMessage(new TextComponentString("\u00A79[World Drop] Removed drop/climb with ID " + dropID + "."));
+			sender.sendMessage(new TextComponentString("[World Drop] Removed drop/climb with ID " + dropID + "."));
 		}
 		else
 		{
-			sender.sendMessage(new TextComponentString("\u00A7c[World Drop] That doesn't seem to be a valid entry for removal."));
+			sender.sendMessage(new TextComponentString("[World Drop] That doesn't seem to be a valid entry for removal."));
 		}
 	}
 }
