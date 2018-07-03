@@ -25,14 +25,15 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 
-public class DropHandler 
+public class DropHandler
 {
 	private static ArrayList<_Drop> drops = new ArrayList<_Drop>();	// The actual drops, in a neat list
 	private static HashMap<Entity, Entity> toRemount = new HashMap<Entity, Entity>();	// Reconnecting rider with mount after they arrive
+	private static ArrayList<Entity> entityInTeleport = new ArrayList<Entity>();
+
 
 	private static String configDir;	// The recommended config directory (/config/)
 	private static String worldFolder;	// The name of the world. Should be unique, if I saw this right
-
 
 	protected static void setConfigDir(String dir)
 	{
@@ -239,20 +240,29 @@ public class DropHandler
 		{
 			currentDrop = it.next();
 
-			if (currentDrop.isClimb) { continue; }	// Only interested in drops at the moment
-			if (player.world.provider.getDimension() != currentDrop.worldFromID) { continue; } // Not the relevant dimension/world
-			if (player.posY > currentDrop.heightFrom) { continue; } // Not at or below the height required to drop from
+			double posY = player.posY;
 
+			if(entityInTeleport.contains(player)) { continue; }
+			if (player.world.provider.getDimension() != currentDrop.worldFromID) { continue; } // Not the relevant dimension/world
+			if (currentDrop.isClimb) { 
+				if (posY < currentDrop.heightFrom) { continue; } // Not at or below the height required to drop from
+			} else {
+				if (posY > currentDrop.heightFrom) { continue; } // Not at or below the height required to drop from
+			}	
+			if (!Event_Listener.isGraceTimerExpired(player)) { continue; }
+	
 			if (!DimensionManager.isDimensionRegistered(currentDrop.worldToID)) // Target dimension doesn't seem to exist, so not doing this
 			{
 				Main.sendConsoleMessage("[World Drop] Target dimension " + currentDrop.worldToID + " doesn't seem to exist. Not letting " + player.getName() + " drop.");
 				continue;
 			}
 
+			Main.sendConsoleMessage("[World Drop] Teleporting " + player.getName() + " to dimension " + currentDrop.worldToID + " at posY: " + currentDrop.heightTo);
 			player.removePassengers();			// TODO: Clutch for now. Right now the player is assumed to be the highest rider in the stack.
 			moveEntity(currentDrop, player);	// Checks out. Let's do this.
 
 			secureTargetLocation(player.world, player);
+			Event_Listener.addPlayerGraceTimer(player);
 
 			return true;	// Successful drop
 		}
@@ -260,48 +270,16 @@ public class DropHandler
 		return false;
 	}
 
-
-	// What about going back up?
-	static boolean checkPlayerClimb(EntityPlayer player)
-	{
-		Iterator<_Drop> it = drops.iterator();
-		_Drop climb;
-
-		while (it.hasNext())
-		{
-			climb = it.next();
-
-			if (!climb.isClimb) { continue; }	// Only interested in drops at the moment
-			if (player.world.provider.getDimension() != climb.worldFromID) { continue; } // Not the relevant dimension/world
-			if (player.posY < climb.heightFrom)	{ continue; }	// Below the required height
-
-			if (!DimensionManager.isDimensionRegistered(climb.worldToID)) // Target dimension doesn't seem to exist, so not doing this
-			{
-				Main.sendConsoleMessage("[World Drop] Target dimension " + climb.worldToID + " doesn't seem to exist. Not letting " + player.getName() + " climb.");
-				continue;
-			}
-
-			player.removePassengers();	// TODO
-			moveEntity(climb, player); // Checks out. Let's do this.
-
-			secureTargetLocation(player.world, player);
-
-			return true;	// Successful climb
-		}
-
-		return false;
-	}
-
-
 	private static void moveEntity(_Drop drop, Entity entity)
 	{
+
+		entityInTeleport.add(entity);
 		Entity ridden = entity.getRidingEntity();	// Need to keep track if the player is riding something, since they get dismounted on transfer
 		entity.dismountRidingEntity();				// Begone in either case, to be remounted later
 
-		// Keeping track of how fast you went before
-		double velX = entity.motionX;
-		double velY = entity.motionY;
-		double velZ = entity.motionZ;
+
+		// Keeping old location
+		double posY = entity.posY;
 
 		if (drop.worldFromID != drop.worldToID) 	// Off you go (Traveling to a different dimension)
 		{
@@ -324,15 +302,11 @@ public class DropHandler
 			return;
 		}
 
+
 		if (drop.forceCoords)
 		{
 			// Forcing a specific entry position
 			entity.setPositionAndUpdate(drop.posX, drop.heightTo, drop.posZ);
-		}
-		else
-		{
-			// Just setting your position, so you come out at the right height
-			entity.setPositionAndUpdate(entity.posX, drop.heightTo, entity.posZ);
 		}
 
 		//entity.setVelocity(velX, velY, velZ);	// Velocity should be maintained. Probably. EDIT: Fuck that noise, this is a client-only method. :|
@@ -346,6 +320,14 @@ public class DropHandler
 			// Remounting in a couple ticks
 			toRemount.put(entity, ridden);
 		}
+		while(entity.posY == posY) {
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		entityInTeleport.remove(entity);
 	}
 
 
@@ -548,7 +530,7 @@ public class DropHandler
 	// Displaying all known drops to the one who asked
 	static void showDrops(ICommandSender sender)
 	{
-		sender.sendMessage(new TextComponentString("§e[World Drop] Known drops:"));
+		sender.sendMessage(new TextComponentString("\u00A7e[World Drop] Known drops:"));
 
 		ListIterator<_Drop> it = drops.listIterator();
 		_Drop drop;
@@ -570,7 +552,7 @@ public class DropHandler
 			sender.sendMessage(new TextComponentString(desc));
 		}
 
-		sender.sendMessage(new TextComponentString("§e[World Drop] Known climbs:"));
+		sender.sendMessage(new TextComponentString("\u00A7e[World Drop] Known climbs:"));
 
 		it = drops.listIterator();	// Reset
 
@@ -627,7 +609,7 @@ public class DropHandler
 
 		if (dropID < 0 || dropID >= drops.size())
 		{
-			sender.sendMessage(new TextComponentString("§c[World Drop] Drop " + dropID + " doesn't seem to exist. Doing nothing."));
+			sender.sendMessage(new TextComponentString("\u00A7c[World Drop] Drop " + dropID + " doesn't seem to exist. Doing nothing."));
 			return;
 		}
 
@@ -643,11 +625,11 @@ public class DropHandler
 
 		if (!knownDrop.forceCoords)
 		{
-			sender.sendMessage(new TextComponentString("§c[World Drop] Point entry for Drop " + dropID + " has been disabled."));
+			sender.sendMessage(new TextComponentString("\u00A7c[World Drop] Point entry for Drop " + dropID + " has been disabled."));
 		}
 		else
 		{
-			sender.sendMessage(new TextComponentString("§a[World Drop] Point entry for Drop " + dropID +
+			sender.sendMessage(new TextComponentString("\u00A7a[World Drop] Point entry for Drop " + dropID +
 					" has been enabled and set to X " + knownDrop.posX + " and Z " + knownDrop.posZ + "."));
 		}
 	}
@@ -680,11 +662,11 @@ public class DropHandler
 		if (dropID >= 0 && dropID < drops.size())
 		{
 			drops.remove(dropID);
-			sender.sendMessage(new TextComponentString("§9[World Drop] Removed drop/climb with ID " + dropID + "."));
+			sender.sendMessage(new TextComponentString("\u00A79[World Drop] Removed drop/climb with ID " + dropID + "."));
 		}
 		else
 		{
-			sender.sendMessage(new TextComponentString("§c[World Drop] That doesn't seem to be a valid entry for removal."));
+			sender.sendMessage(new TextComponentString("\u00A7c[World Drop] That doesn't seem to be a valid entry for removal."));
 		}
 	}
 }
