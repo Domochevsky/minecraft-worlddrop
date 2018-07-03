@@ -273,13 +273,8 @@ public class DropHandler
 	private static void moveEntity(_Drop drop, Entity entity)
 	{
 
-		entityInTeleport.add(entity);
 		Entity ridden = entity.getRidingEntity();	// Need to keep track if the player is riding something, since they get dismounted on transfer
 		entity.dismountRidingEntity();				// Begone in either case, to be remounted later
-
-
-		// Keeping old location
-		double posY = entity.posY;
 
 		if (drop.worldFromID != drop.worldToID) 	// Off you go (Traveling to a different dimension)
 		{
@@ -320,14 +315,6 @@ public class DropHandler
 			// Remounting in a couple ticks
 			toRemount.put(entity, ridden);
 		}
-		while(entity.posY == posY) {
-			try {
-				Thread.sleep(500);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		entityInTeleport.remove(entity);
 	}
 
 
