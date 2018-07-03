@@ -25,6 +25,8 @@ public class Transition
 		PlayerList playerList = player.mcServer.getPlayerList();
 
         int dimensionFrom = player.dimension;
+        float oldYaw = player.rotationYaw;
+        float oldPitch = player.rotationPitch;
 
         // Changing dimensions...
         WorldServer wsPrev = player.mcServer.getWorld(player.dimension);
@@ -66,13 +68,9 @@ public class Transition
         
         // Signal Forge that we are about to change dimensions
         net.minecraftforge.fml.common.FMLCommonHandler.instance().firePlayerChangedDimensionEvent(player, dimensionFrom, dimensionTo);
-
-        
-        // Tell the client our position (Keep same position for now to avoid taking massive suffocation damage)
-        player.connection.setPlayerLocation(player.posX, player.posY, player.posZ, player.rotationYaw, player.rotationPitch);
         
         // Now that we've updated the client, set the real position
-        player.connection.setPlayerLocation(Math.floor(player.posX) + 0.5, targetHeight, Math.floor(player.posZ) + 0.5, player.rotationYaw, player.rotationPitch);
+        player.connection.setPlayerLocation(Math.floor(player.posX) + 0.5, targetHeight, Math.floor(player.posZ) + 0.5, oldYaw, oldPitch);
 	}
         
 
