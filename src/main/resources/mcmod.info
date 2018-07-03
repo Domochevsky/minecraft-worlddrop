@@ -7,8 +7,8 @@
   "mcversion": "${mcversion}",
   "url": "",
   "updateUrl": "",
-  "authorList": ["Domochevsky and Felina_Lain"],
-  "credits": "Domochevsky for the original mod, and his advices during the updating process. Thanks again.",
+  "authorList": ["Domochevsky, Felina_Lain and Nerodon"],
+  "credits": "Special thanks to Domochevsky for the original mod, Felina_Lain for the 1.12 update, thanks to you both!",
   "logoFile": "",
   "screenshots": [],
   "dependencies": []
