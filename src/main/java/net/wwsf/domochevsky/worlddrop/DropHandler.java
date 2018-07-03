@@ -263,6 +263,7 @@ public class DropHandler
 
 			secureTargetLocation(player.world, player);
 			Event_Listener.addPlayerGraceTimer(player);
+			Event_Listener.addPlayerDamageGraceTimer(player);
 
 			return true;	// Successful drop
 		}
