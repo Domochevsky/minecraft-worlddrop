@@ -14,18 +14,19 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.WorldServer;
 
-public class Transition 
+public class Transition
 {
-	// Copying and modifying vanilla functions, so we don't try to come out of a portal on dimension change.
 	// Looks like I need to travel deep.
 	static void transferPlayerToDimension(EntityPlayerMP player, int dimensionTo, int targetHeight)
     {
 		if (!net.minecraftforge.common.ForgeHooks.onTravelToDimension(player, dimensionTo)) { return; }	// Moving that here, to consolidate these functions.
 
-		net.minecraft.world.Teleporter teleporter = player.mcServer.getWorld(dimensionTo).getDefaultTeleporter();
+		SimpleTeleporter teleporter = new SimpleTeleporter(player.mcServer.getWorld(dimensionTo));
 		PlayerList playerList = player.mcServer.getPlayerList();
 
         int dimensionFrom = player.dimension;
+        float oldYaw = player.rotationYaw;
+        float oldPitch = player.rotationPitch;
 
         // Changing dimensions...
         WorldServer wsPrev = player.mcServer.getWorld(player.dimension);
@@ -41,19 +42,16 @@ public class Transition
         playerList.updatePermissionLevel(player);
 
         // Begone from the old world?
-        wsPrev.removeEntity(player);
+        wsPrev.removeEntityDangerously(player);
 
-        // Safety, I suppose.
+        // Sets the player as not dead as removeEntityDangerously kills the entity ( we don't want that ).
         player.isDead = false;
 
         // We haven't reached the "set portal" level yet. Going deeper.
-        transferEntityToWorld(player, dimensionFrom, wsPrev, wsNew, teleporter, targetHeight);
+        transferEntityToWorld(player, dimensionFrom, wsPrev, wsNew, teleporter);
 
         // Getting chunks ready?
         playerList.preparePlayer(player, wsPrev);
-
-        // Inserting their new position here? May not be necessary, since this is called by the drop and transfer, which sets the position beforehand and afterwards.
-        player.connection.setPlayerLocation(player.posX, player.posY, player.posZ, player.rotationYaw, player.rotationPitch);
 
         // More formalities...
         player.interactionManager.setWorld(wsNew);
@@ -67,10 +65,14 @@ public class Transition
         {
             player.connection.sendPacket(new SPacketEntityEffect(player.getEntityId(), potioneffect));
         }
-
-        // We're done.
+        
+        // Signal Forge that we are about to change dimensions
         net.minecraftforge.fml.common.FMLCommonHandler.instance().firePlayerChangedDimensionEvent(player, dimensionFrom, dimensionTo);
-    }
+        
+        // Now that we've updated the client, set the real position
+        player.connection.setPlayerLocation(Math.floor(player.posX) + 0.5, targetHeight, Math.floor(player.posZ) + 0.5, oldYaw, oldPitch);
+	}
+        
 
 
 	static Entity transferRegularEntityToDimension(Entity entity, int dimensionIn, int targetHeight)
@@ -195,7 +197,7 @@ public class Transition
 
 
 	// We must go deeper.
-	private static void transferEntityToWorld(Entity entityIn, int lastDimension, WorldServer oldWorldIn, WorldServer toWorldIn, net.minecraft.world.Teleporter teleporter, int targetHeight)
+	private static void transferEntityToWorld(Entity entityIn, int lastDimension, WorldServer oldWorldIn, WorldServer toWorldIn, SimpleTeleporter teleporter)
     {
         net.minecraft.world.WorldProvider pOld = oldWorldIn.provider;
         net.minecraft.world.WorldProvider pNew = toWorldIn.provider;
@@ -205,6 +207,7 @@ public class Transition
         // What does this do?
         double newPosX = entityIn.posX * moveFactor;
         double newPosZ = entityIn.posZ * moveFactor;
+        double PosY = entityIn.posY;
         //double d2 = 8.0D;
 
         float entityRotationYaw = entityIn.rotationYaw;	// What is this being saved for?
@@ -248,9 +251,9 @@ public class Transition
 
             if (entityIn.isEntityAlive())
             {
-                entityIn.setLocationAndAngles(newPosX, targetHeight, newPosZ, entityIn.rotationYaw, entityIn.rotationPitch);
+                entityIn.setLocationAndAngles(newPosX, PosY, newPosZ, entityIn.rotationYaw, entityIn.rotationPitch);
 
-                //teleporter.placeInPortal(entityIn, entityRotationYaw);	// Found it. Begone with ye.
+                teleporter.placeInPortal(entityIn, entityRotationYaw);
 
                 toWorldIn.spawnEntity(entityIn);
                 toWorldIn.updateEntityWithOptionalForce(entityIn, false);

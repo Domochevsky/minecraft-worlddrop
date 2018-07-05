@@ -21,5 +21,15 @@ b14
 
 b15
 - Updated to 1.10.*
+
+b16
+- Updated to 1.12.*
+
+b17
+- Removed color chat formatting, no longer working in 1.12.2 as is.
+- Fixed chained teleports from occurring when more than one successive drop have a valid height for where the player is.
+- Fixed Player taking massive continuous suffocation damage while the client was loading the dimension.
+- Added small grace period to avoid quickly teleporting back and forth and also makes players invulnerable against damage for a short time.
+
  */
 }
